@@ -66,7 +66,6 @@ Typed helpers that build the correct wire format automatically:
 | `type_text(desktop_id, text)` | Type a string at the current cursor position. |
 | `key_press(desktop_id, key)` | Send a key or chord (e.g. `"Return"`, `"ctrl+c"`). |
 | `scroll(desktop_id, x, y, *, direction, amount=3)` | Scroll at `(x, y)`. `direction` is `"up"` or `"down"`. |
-| `drag(desktop_id, start_x, start_y, end_x, end_y)` | Click-drag from `(start_x, start_y)` to `(end_x, end_y)`. |
 | `cursor_position(desktop_id)` | Return the current cursor coordinates. |
 
 ```python
@@ -78,9 +77,6 @@ result = client.screenshot(desktop.desktop_id)
 client.left_click(desktop.desktop_id, 512, 384)
 client.type_text(desktop.desktop_id, "hello world")
 client.scroll(desktop.desktop_id, 512, 384, direction="down", amount=5)
-
-# Drag from (100, 200) to (300, 400)
-client.drag(desktop.desktop_id, 100, 200, 300, 400)
 
 # Key combos
 client.key_press(desktop.desktop_id, "ctrl+c")
