@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 import httpx
 
@@ -104,6 +104,100 @@ class NenDesktop:
         )
         self._raise_for_status(resp)
         return ExecuteResult.model_validate(resp.json())
+
+    # -- Computer-use action helpers --
+    # These build the correct Anthropic-native params format so callers don't
+    # need to know the wire representation.
+
+    def screenshot(self, desktop_id: str) -> ExecuteResult:
+        return self.execute(desktop_id, tool="computer", action="screenshot")
+
+    def left_click(self, desktop_id: str, x: int, y: int) -> ExecuteResult:
+        return self.execute(
+            desktop_id,
+            tool="computer",
+            action="left_click",
+            params={"coordinate": [x, y]},
+        )
+
+    def right_click(self, desktop_id: str, x: int, y: int) -> ExecuteResult:
+        return self.execute(
+            desktop_id,
+            tool="computer",
+            action="right_click",
+            params={"coordinate": [x, y]},
+        )
+
+    def double_click(self, desktop_id: str, x: int, y: int) -> ExecuteResult:
+        return self.execute(
+            desktop_id,
+            tool="computer",
+            action="double_click",
+            params={"coordinate": [x, y]},
+        )
+
+    def middle_click(self, desktop_id: str, x: int, y: int) -> ExecuteResult:
+        return self.execute(
+            desktop_id,
+            tool="computer",
+            action="middle_click",
+            params={"coordinate": [x, y]},
+        )
+
+    def mouse_move(self, desktop_id: str, x: int, y: int) -> ExecuteResult:
+        return self.execute(
+            desktop_id,
+            tool="computer",
+            action="mouse_move",
+            params={"coordinate": [x, y]},
+        )
+
+    def type_text(self, desktop_id: str, text: str) -> ExecuteResult:
+        return self.execute(
+            desktop_id, tool="computer", action="type", params={"text": text}
+        )
+
+    def key_press(self, desktop_id: str, key: str) -> ExecuteResult:
+        return self.execute(
+            desktop_id, tool="computer", action="key", params={"key": key}
+        )
+
+    def scroll(
+        self,
+        desktop_id: str,
+        x: int,
+        y: int,
+        *,
+        direction: Literal["up", "down"],
+        amount: int = 3,
+    ) -> ExecuteResult:
+        return self.execute(
+            desktop_id,
+            tool="computer",
+            action="scroll",
+            params={"coordinate": [x, y], "direction": direction, "amount": amount},
+        )
+
+    def drag(
+        self,
+        desktop_id: str,
+        start_x: int,
+        start_y: int,
+        end_x: int,
+        end_y: int,
+    ) -> ExecuteResult:
+        return self.execute(
+            desktop_id,
+            tool="computer",
+            action="drag",
+            params={
+                "start_coordinate": [start_x, start_y],
+                "coordinate": [end_x, end_y],
+            },
+        )
+
+    def cursor_position(self, desktop_id: str) -> ExecuteResult:
+        return self.execute(desktop_id, tool="computer", action="cursor_position")
 
     def list_tools(self, desktop_id: str) -> list[ToolSchema]:
         resp = self._client.get(f"/desktops/{desktop_id}/tools")
