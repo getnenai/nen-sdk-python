@@ -51,12 +51,44 @@ The `execute()` method uses a 120-second timeout regardless of the client timeou
 | `update_desktop(desktop_id, *, name)` | Update desktop name. Returns `Desktop`. |
 | `delete_desktop(desktop_id)` | Delete a desktop. Returns `DeleteResponse`. |
 
-### Tool Execution
+### Computer-use actions
+
+Typed helpers that build the correct wire format automatically:
 
 | Method | Description |
 |--------|-------------|
-| `execute(desktop_id, *, tool, action, params=None)` | Execute a tool action. Returns `ExecuteResult`. |
-| `list_tools(desktop_id)` | List available tools. Returns `list[ToolSchema]`. |
+| `screenshot(desktop_id)` | Capture a screenshot. Returns `ExecuteResult` with `base64_image`. |
+| `left_click(desktop_id, x, y)` | Left-click at `(x, y)`. |
+| `right_click(desktop_id, x, y)` | Right-click at `(x, y)`. |
+| `double_click(desktop_id, x, y)` | Double-click at `(x, y)`. |
+| `middle_click(desktop_id, x, y)` | Middle-click at `(x, y)`. |
+| `mouse_move(desktop_id, x, y)` | Move the cursor to `(x, y)` without clicking. |
+| `type_text(desktop_id, text)` | Type a string at the current cursor position. |
+| `key_press(desktop_id, key)` | Send a key or chord (e.g. `"Return"`, `"ctrl+c"`). |
+| `scroll(desktop_id, x, y, *, direction, amount=3)` | Scroll at `(x, y)`. `direction` is `"up"` or `"down"`. |
+| `cursor_position(desktop_id)` | Return the current cursor coordinates. |
+
+```python
+# Take a screenshot
+result = client.screenshot(desktop.desktop_id)
+# result.base64_image contains a PNG encoded as base64
+
+# Click, type, scroll
+client.left_click(desktop.desktop_id, 512, 384)
+client.type_text(desktop.desktop_id, "hello world")
+client.scroll(desktop.desktop_id, 512, 384, direction="down", amount=5)
+
+# Key combos
+client.key_press(desktop.desktop_id, "ctrl+c")
+client.key_press(desktop.desktop_id, "Return")
+```
+
+### Low-level execute
+
+| Method | Description |
+|--------|-------------|
+| `execute(desktop_id, *, tool, action, params=None)` | Execute any tool action with a raw params dict. Returns `ExecuteResult`. |
+| `list_tools(desktop_id)` | List available tools and their schemas. Returns `list[ToolSchema]`. |
 | `get_tool_logs(desktop_id)` | Get tool execution logs. Returns `list[dict]`. |
 
 ### Sessions
