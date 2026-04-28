@@ -5,13 +5,13 @@ Python SDK for the [Nen Desktop API](https://getnen.ai). Create cloud desktops, 
 ## Installation
 
 ```bash
-pip install nen-desktop
+pip install nen-sdk-python
 ```
 
 ## Quick Start
 
 ```python
-from nen_desktop import NenDesktop
+from nen_sdk import NenDesktop
 
 client = NenDesktop(api_key="sk_nen_...")
 
@@ -105,7 +105,7 @@ client.key_press(desktop.desktop_id, "Return")
 All API errors raise a subclass of `NenDesktopError`, which carries `status_code` and `response_body`:
 
 ```python
-from nen_desktop import NenDesktop, NotFoundError, AuthenticationError
+from nen_sdk import NenDesktop, NotFoundError, AuthenticationError
 
 client = NenDesktop(api_key="sk_nen_...")
 

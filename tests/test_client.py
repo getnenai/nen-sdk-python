@@ -5,7 +5,7 @@ import uuid
 
 import pytest
 
-from nen_desktop import (
+from nen_sdk import (
     AuthenticationError,
     Desktop,
     NenDesktop,
