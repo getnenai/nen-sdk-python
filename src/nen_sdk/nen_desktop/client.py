@@ -4,14 +4,14 @@ from typing import Any, Literal
 
 import httpx
 
-from nen_desktop.exceptions import (
+from nen_sdk.exceptions import (
     AuthenticationError,
     ConflictError,
     NenDesktopError,
     NotFoundError,
     ServerError,
 )
-from nen_desktop.models import (
+from nen_sdk.models import (
     DeleteResponse,
     Desktop,
     ExecuteResult,

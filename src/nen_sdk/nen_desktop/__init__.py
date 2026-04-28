@@ -1,13 +1,13 @@
-from nen_desktop._version import __version__
-from nen_desktop.client import NenDesktop
-from nen_desktop.exceptions import (
+from nen_sdk._version import __version__
+from nen_sdk.client import NenDesktop
+from nen_sdk.exceptions import (
     AuthenticationError,
     ConflictError,
     NenDesktopError,
     NotFoundError,
     ServerError,
 )
-from nen_desktop.models import (
+from nen_sdk.models import (
     DeleteResponse,
     Desktop,
     ExecuteResult,
