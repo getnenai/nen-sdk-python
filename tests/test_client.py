@@ -104,6 +104,14 @@ def test_helper_scroll(client: NenDesktop, desktop: Desktop) -> None:
     assert result.status == "ok"
 
 
+# -- 11. Action helper: drag --
+
+
+def test_helper_drag(client: NenDesktop, desktop: Desktop) -> None:
+    result = client.drag(desktop.desktop_id, 100, 100, 200, 200)
+    assert result.status == "ok"
+
+
 # -- 12. List tools --
 
 

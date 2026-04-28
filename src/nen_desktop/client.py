@@ -159,7 +159,25 @@ class NenDesktop:
 
     def key_press(self, desktop_id: str, key: str) -> ExecuteResult:
         return self.execute(
-            desktop_id, tool="computer", action="key", params={"text": key}
+            desktop_id, tool="computer", action="key", params={"key": key}
+        )
+
+    def drag(
+        self,
+        desktop_id: str,
+        start_x: int,
+        start_y: int,
+        end_x: int,
+        end_y: int,
+    ) -> ExecuteResult:
+        return self.execute(
+            desktop_id,
+            tool="computer",
+            action="drag",
+            params={
+                "start_coordinate": [start_x, start_y],
+                "coordinate": [end_x, end_y],
+            },
         )
 
     def scroll(
