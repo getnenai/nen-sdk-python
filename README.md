@@ -104,4 +104,4 @@ with NenDesktop(api_key="sk_nen_...") as client:
 
 ## Examples
 
-See the full agent example in [`cmd/nen/templates/anthropic-computer-use/agent.py`](../../cmd/nen/templates/anthropic-computer-use/agent.py).
+See the full agent example in the [Nen documentation](https://docs.getnen.ai/examples/anthropic).
