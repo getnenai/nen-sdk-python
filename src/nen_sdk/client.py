@@ -234,6 +234,10 @@ class NenDesktop:
         The server caps the body at 100 MiB. ``content_type`` is sent verbatim
         and defaults to ``application/octet-stream``.
         """
+        # An empty name would build ``/files/`` (the list endpoint) and the
+        # server would return a confusing 404/405. Fail fast on the client.
+        if not name:
+            raise ValueError("name must be a non-empty string")
         resp = self._client.post(
             f"/desktops/{desktop_id}/files/{quote(name, safe='')}",
             content=body,
@@ -245,6 +249,8 @@ class NenDesktop:
 
     def download_file(self, desktop_id: str, name: str) -> bytes:
         """Download ``name`` from the desktop's shared drive and return its bytes."""
+        if not name:
+            raise ValueError("name must be a non-empty string")
         resp = self._client.get(
             f"/desktops/{desktop_id}/files/{quote(name, safe='')}",
             timeout=_EXECUTE_TIMEOUT,

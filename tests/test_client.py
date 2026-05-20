@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import os
 import uuid
 
@@ -176,6 +177,41 @@ def test_files_round_trip(client: NenDesktop, desktop: Desktop) -> None:
 
     got = client.download_file(desktop.desktop_id, name)
     assert got == payload
+
+    # Same round-trip via the file-like (IO[bytes]) upload path so both
+    # supported body shapes stay covered.
+    name_io = f"round-trip-io-{uuid.uuid4().hex[:12]}.txt"
+    payload_io = f"nen-sdk-python round-trip io {uuid.uuid4()}\n".encode()
+    up_io = client.upload_file(
+        desktop.desktop_id,
+        name_io,
+        io.BytesIO(payload_io),
+        content_type="text/plain",
+    )
+    assert up_io.success
+    assert up_io.size == len(payload_io)
+    assert up_io.filename == name_io
+    assert client.download_file(desktop.desktop_id, name_io) == payload_io
+
+
+# -- 15c. Files API guards: empty name --
+
+
+def test_files_reject_empty_name() -> None:
+    """upload_file / download_file must fail fast on empty name (would
+    otherwise hit the /files/ list endpoint and return a confusing error).
+
+    No live API call here — the guard fires client-side. Runs without
+    NEN_API_KEY so the contract stays covered even in unauthenticated CI.
+    """
+    offline = NenDesktop("sk_nen_dummy_for_offline_guard_test")
+    try:
+        with pytest.raises(ValueError, match="non-empty"):
+            offline.upload_file("dsk_x", "", b"x", content_type="text/plain")
+        with pytest.raises(ValueError, match="non-empty"):
+            offline.download_file("dsk_x", "")
+    finally:
+        offline.close()
 
 
 # ---------------------------------------------------------------
