@@ -11,8 +11,10 @@ from nen_sdk.models import (
     DeleteResponse,
     Desktop,
     ExecuteResult,
+    File,
     SessionInfo,
     ToolSchema,
+    UploadFileResponse,
 )
 
 __all__ = [
@@ -21,11 +23,13 @@ __all__ = [
     "DeleteResponse",
     "Desktop",
     "ExecuteResult",
+    "File",
     "NenDesktop",
     "NenDesktopError",
     "NotFoundError",
     "ServerError",
     "SessionInfo",
     "ToolSchema",
+    "UploadFileResponse",
     "__version__",
 ]

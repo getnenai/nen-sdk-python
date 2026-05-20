@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import IO, Any, Literal
+from urllib.parse import quote
 
 import httpx
 
@@ -15,8 +16,10 @@ from nen_sdk.models import (
     DeleteResponse,
     Desktop,
     ExecuteResult,
+    File,
     SessionInfo,
     ToolSchema,
+    UploadFileResponse,
 )
 
 _DEFAULT_BASE_URL = "https://desktop.api.getnen.ai"
@@ -206,6 +209,54 @@ class NenDesktop:
     def delete_session(self, desktop_id: str) -> None:
         resp = self._client.delete(f"/desktops/{desktop_id}/session")
         self._raise_for_status(resp)
+
+    # -- Files --
+
+    def list_files(self, desktop_id: str) -> list[File]:
+        """List files on the desktop's shared drive."""
+        resp = self._client.get(f"/desktops/{desktop_id}/files")
+        self._raise_for_status(resp)
+        # No silent default — a missing "files" key signals a contract
+        # regression we want to surface, not paper over as "empty drive".
+        return [File.model_validate(f) for f in resp.json()["files"]]
+
+    def upload_file(
+        self,
+        desktop_id: str,
+        name: str,
+        body: bytes | IO[bytes],
+        *,
+        content_type: str = "application/octet-stream",
+    ) -> UploadFileResponse:
+        """Upload ``body`` to the desktop's shared drive as ``name``.
+
+        Accepts a ``bytes`` blob or any binary file-like (``open(..., "rb")``).
+        The server caps the body at 100 MiB. ``content_type`` is sent verbatim
+        and defaults to ``application/octet-stream``.
+        """
+        # An empty name would build ``/files/`` (the list endpoint) and the
+        # server would return a confusing 404/405. Fail fast on the client.
+        if not name:
+            raise ValueError("name must be a non-empty string")
+        resp = self._client.post(
+            f"/desktops/{desktop_id}/files/{quote(name, safe='')}",
+            content=body,
+            headers={"Content-Type": content_type},
+            timeout=_EXECUTE_TIMEOUT,
+        )
+        self._raise_for_status(resp)
+        return UploadFileResponse.model_validate(resp.json())
+
+    def download_file(self, desktop_id: str, name: str) -> bytes:
+        """Download ``name`` from the desktop's shared drive and return its bytes."""
+        if not name:
+            raise ValueError("name must be a non-empty string")
+        resp = self._client.get(
+            f"/desktops/{desktop_id}/files/{quote(name, safe='')}",
+            timeout=_EXECUTE_TIMEOUT,
+        )
+        self._raise_for_status(resp)
+        return resp.content
 
     # -- Error handling --
 

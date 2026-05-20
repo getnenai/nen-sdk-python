@@ -50,3 +50,27 @@ class ToolSchema(BaseModel):
     name: str
     description: str
     parameters: dict = {}
+
+
+class File(BaseModel):
+    """A single entry from GET /desktops/{id}/files.
+
+    ``modified`` is a Unix-epoch float with fractional seconds (the
+    controller emits sub-second resolution from the on-disk mtime).
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    name: str
+    size: int
+    modified: float
+
+
+class UploadFileResponse(BaseModel):
+    """Response from POST /desktops/{id}/files/{name}."""
+
+    model_config = ConfigDict(frozen=True)
+
+    success: bool
+    size: int
+    filename: str

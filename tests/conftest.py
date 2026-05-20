@@ -4,7 +4,7 @@ import os
 
 import pytest
 
-from nen_desktop import NenDesktop
+from nen_sdk import NenDesktop
 
 
 @pytest.fixture(scope="session")
