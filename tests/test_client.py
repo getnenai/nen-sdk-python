@@ -5,7 +5,7 @@ import uuid
 
 import pytest
 
-from nen_desktop import (
+from nen_sdk import (
     AuthenticationError,
     Desktop,
     NenDesktop,
@@ -150,6 +150,32 @@ def test_session_idempotency(client: NenDesktop, desktop: Desktop) -> None:
 
     session2 = client.create_session(desktop.desktop_id)
     assert session2.active is True
+
+
+# -- 15b. Files round-trip (reuses shared desktop) --
+
+
+def test_files_round_trip(client: NenDesktop, desktop: Desktop) -> None:
+    name = f"round-trip-{uuid.uuid4().hex[:12]}.txt"
+    payload = f"nen-sdk-python round-trip {uuid.uuid4()}\n".encode()
+
+    up = client.upload_file(
+        desktop.desktop_id,
+        name,
+        payload,
+        content_type="text/plain",
+    )
+    assert up.success
+    assert up.size == len(payload)
+    assert up.filename == name
+
+    files = client.list_files(desktop.desktop_id)
+    found = next((f for f in files if f.name == name), None)
+    assert found is not None, f"uploaded file {name} not in listing of {len(files)}"
+    assert found.size == len(payload)
+
+    got = client.download_file(desktop.desktop_id, name)
+    assert got == payload
 
 
 # ---------------------------------------------------------------
