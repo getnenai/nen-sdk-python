@@ -34,7 +34,13 @@ jobs:
         run: uv build
 
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@f0d01257fbc14df58ecd438a670e2b869bbdb423 # v1.10.1
+        # v1.14.0 bundles twine 6.x, which validates Metadata-Version 2.4
+        # wheels — those are what `uv build` 0.11+ now produces. The earlier
+        # v1.10.1 pin bundled twine 5.x and rejected our wheels with
+        # "InvalidDistribution: Metadata is missing required fields: Name,
+        # Version" (twine 5.x reads Metadata-Version 2.4 as 1.0 and fails
+        # required-field checks).
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
 
       - name: Create GitHub release
         env:
