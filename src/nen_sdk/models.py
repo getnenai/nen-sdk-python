@@ -57,6 +57,8 @@ class File(BaseModel):
 
     ``modified`` is a Unix-epoch float with fractional seconds (the
     controller emits sub-second resolution from the on-disk mtime).
+    ``is_dir`` is true for directory entries; the field defaults to
+    False so older servers that omit it stay deserializable.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -64,6 +66,7 @@ class File(BaseModel):
     name: str
     size: int
     modified: float
+    is_dir: bool = False
 
 
 class UploadFileResponse(BaseModel):

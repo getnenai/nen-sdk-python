@@ -212,9 +212,19 @@ class NenDesktop:
 
     # -- Files --
 
-    def list_files(self, desktop_id: str) -> list[File]:
-        """List files on the desktop's shared drive."""
-        resp = self._client.get(f"/desktops/{desktop_id}/files")
+    def list_files(
+        self, desktop_id: str, *, path: str | None = None
+    ) -> list[File]:
+        """List files on the desktop's shared drive.
+
+        ``path`` selects a subdirectory; an empty string or None lists
+        the root.
+        """
+        params = {"path": path} if path else None
+        resp = self._client.get(
+            f"/desktops/{desktop_id}/files",
+            params=params,
+        )
         self._raise_for_status(resp)
         # No silent default — a missing "files" key signals a contract
         # regression we want to surface, not paper over as "empty drive".

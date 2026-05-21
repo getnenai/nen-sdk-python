@@ -4,6 +4,7 @@ import io
 import os
 import uuid
 
+import httpx
 import pytest
 
 from nen_sdk import (
@@ -12,6 +13,7 @@ from nen_sdk import (
     NenDesktop,
     NotFoundError,
 )
+from nen_sdk.models import File
 
 # ---------------------------------------------------------------
 # Tests using the shared session-scoped desktop are placed first
@@ -212,6 +214,76 @@ def test_files_reject_empty_name() -> None:
             offline.download_file("dsk_x", "")
     finally:
         offline.close()
+
+
+# -- 15d. Files model: is_dir wire compatibility (offline) --
+
+
+def test_file_model_accepts_is_dir_field() -> None:
+    """File deserializes a populated is_dir, and missing is_dir
+    defaults to False so older servers stay compatible."""
+    with_dir = File.model_validate(
+        {"name": "Documents", "size": 0, "modified": 1.5, "is_dir": True}
+    )
+    assert with_dir.is_dir is True
+
+    legacy = File.model_validate({"name": "a.txt", "size": 3, "modified": 1.0})
+    assert legacy.is_dir is False
+
+
+# -- 15e. list_files forwards ?path= (offline, httpx.MockTransport) --
+
+
+def _offline_client(handler) -> NenDesktop:
+    """Return a NenDesktop that routes every request to ``handler``.
+
+    Uses httpx.MockTransport so the test exercises real URL building
+    and parameter encoding without hitting the network.
+    """
+    client = NenDesktop("sk_nen_dummy_offline")
+    client._client = httpx.Client(
+        base_url=client._base_url,
+        headers={"Authorization": f"Bearer {client._api_key}"},
+        transport=httpx.MockTransport(handler),
+    )
+    return client
+
+
+def test_list_files_forwards_path_query() -> None:
+    captured: list[httpx.URL] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(request.url)
+        return httpx.Response(200, json={"files": []})
+
+    client = _offline_client(handler)
+    try:
+        client.list_files("dsk_x", path="Documents")
+    finally:
+        client.close()
+
+    assert len(captured) == 1
+    url = captured[0]
+    assert url.path == "/desktops/dsk_x/files"
+    assert url.params.get("path") == "Documents"
+
+
+def test_list_files_no_path_omits_query() -> None:
+    captured: list[httpx.URL] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(request.url)
+        return httpx.Response(200, json={"files": []})
+
+    client = _offline_client(handler)
+    try:
+        client.list_files("dsk_x")
+    finally:
+        client.close()
+
+    assert len(captured) == 1
+    assert captured[0].raw_path.endswith(b"/desktops/dsk_x/files")
+    assert "path" not in captured[0].params
 
 
 # ---------------------------------------------------------------
