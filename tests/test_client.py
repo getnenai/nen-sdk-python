@@ -290,6 +290,87 @@ def test_list_files_no_path_omits_query() -> None:
     assert "path" not in captured[0].params
 
 
+def test_upload_file_forwards_path_query() -> None:
+    captured: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(request)
+        return httpx.Response(
+            200, json={"success": True, "size": 3, "filename": "hi.txt"}
+        )
+
+    client = _offline_client(handler)
+    try:
+        client.upload_file(
+            "dsk_x", "hi.txt", b"hi!", content_type="text/plain", path="Documents"
+        )
+    finally:
+        client.close()
+
+    assert len(captured) == 1
+    req = captured[0]
+    assert req.method == "POST"
+    assert req.url.path == "/desktops/dsk_x/files/hi.txt"
+    assert req.url.params.get("path") == "Documents"
+
+
+def test_upload_file_no_path_omits_query() -> None:
+    captured: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(request)
+        return httpx.Response(
+            200, json={"success": True, "size": 3, "filename": "hi.txt"}
+        )
+
+    client = _offline_client(handler)
+    try:
+        client.upload_file("dsk_x", "hi.txt", b"hi!", content_type="text/plain")
+    finally:
+        client.close()
+
+    assert len(captured) == 1
+    assert "path" not in captured[0].url.params
+
+
+def test_download_file_forwards_path_query() -> None:
+    captured: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(request)
+        return httpx.Response(200, content=b"contents")
+
+    client = _offline_client(handler)
+    try:
+        got = client.download_file("dsk_x", "hi.txt", path="Documents")
+    finally:
+        client.close()
+
+    assert got == b"contents"
+    assert len(captured) == 1
+    req = captured[0]
+    assert req.method == "GET"
+    assert req.url.path == "/desktops/dsk_x/files/hi.txt"
+    assert req.url.params.get("path") == "Documents"
+
+
+def test_download_file_no_path_omits_query() -> None:
+    captured: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(request)
+        return httpx.Response(200, content=b"contents")
+
+    client = _offline_client(handler)
+    try:
+        client.download_file("dsk_x", "hi.txt")
+    finally:
+        client.close()
+
+    assert len(captured) == 1
+    assert "path" not in captured[0].url.params
+
+
 # ---------------------------------------------------------------
 # CRUD lifecycle — creates its own desktop.
 # Placed after shared-desktop tests so the pool isn't drained.
