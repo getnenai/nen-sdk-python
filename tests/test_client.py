@@ -241,6 +241,10 @@ def _offline_client(handler) -> NenDesktop:
     and parameter encoding without hitting the network.
     """
     client = NenDesktop("sk_nen_dummy_offline")
+    # Dispose the real httpx.Client NenDesktop opened in __init__ before
+    # swapping in the MockTransport one — otherwise the connection pool
+    # the real client allocated stays open for the lifetime of the test.
+    client._client.close()
     client._client = httpx.Client(
         base_url=client._base_url,
         headers={"Authorization": f"Bearer {client._api_key}"},
