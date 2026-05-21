@@ -212,9 +212,19 @@ class NenDesktop:
 
     # -- Files --
 
-    def list_files(self, desktop_id: str) -> list[File]:
-        """List files on the desktop's shared drive."""
-        resp = self._client.get(f"/desktops/{desktop_id}/files")
+    def list_files(
+        self, desktop_id: str, *, path: str | None = None
+    ) -> list[File]:
+        """List files on the desktop's shared drive.
+
+        ``path`` selects a subdirectory; an empty string or None lists
+        the root.
+        """
+        params = {"path": path} if path else None
+        resp = self._client.get(
+            f"/desktops/{desktop_id}/files",
+            params=params,
+        )
         self._raise_for_status(resp)
         # No silent default — a missing "files" key signals a contract
         # regression we want to surface, not paper over as "empty drive".
@@ -227,19 +237,25 @@ class NenDesktop:
         body: bytes | IO[bytes],
         *,
         content_type: str = "application/octet-stream",
+        path: str | None = None,
     ) -> UploadFileResponse:
         """Upload ``body`` to the desktop's shared drive as ``name``.
 
         Accepts a ``bytes`` blob or any binary file-like (``open(..., "rb")``).
         The server caps the body at 100 MiB. ``content_type`` is sent verbatim
         and defaults to ``application/octet-stream``.
+
+        ``path`` selects a subdirectory under the drive root; missing
+        intermediate directories are created on the server.
         """
         # An empty name would build ``/files/`` (the list endpoint) and the
         # server would return a confusing 404/405. Fail fast on the client.
         if not name:
             raise ValueError("name must be a non-empty string")
+        params = {"path": path} if path else None
         resp = self._client.post(
             f"/desktops/{desktop_id}/files/{quote(name, safe='')}",
+            params=params,
             content=body,
             headers={"Content-Type": content_type},
             timeout=_EXECUTE_TIMEOUT,
@@ -247,12 +263,19 @@ class NenDesktop:
         self._raise_for_status(resp)
         return UploadFileResponse.model_validate(resp.json())
 
-    def download_file(self, desktop_id: str, name: str) -> bytes:
-        """Download ``name`` from the desktop's shared drive and return its bytes."""
+    def download_file(
+        self, desktop_id: str, name: str, *, path: str | None = None
+    ) -> bytes:
+        """Download ``name`` from the desktop's shared drive and return its bytes.
+
+        ``path`` selects a subdirectory under the drive root.
+        """
         if not name:
             raise ValueError("name must be a non-empty string")
+        params = {"path": path} if path else None
         resp = self._client.get(
             f"/desktops/{desktop_id}/files/{quote(name, safe='')}",
+            params=params,
             timeout=_EXECUTE_TIMEOUT,
         )
         self._raise_for_status(resp)
